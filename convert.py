@@ -174,12 +174,18 @@ class jsonConvert(object):
         if five_contents:
             seven_contents = five_contents[0].get('7')
             if seven_contents:
-                # 8文本 
-                text = seven_contents[0].get('8')
-                # 9文本属性
-                text_attrs = seven_contents[0].get('9')
-                if text and text_attrs:
-                    text = self.convert_text_attribute(text,text_attrs)
+                for seven_content in seven_contents:
+                    split_text = seven_content.get('8')
+                    text_attrs = seven_content.get('9')
+                    if split_text and text_attrs:
+                        split_text = self.convert_text_attribute(split_text, text_attrs)
+                    text += split_text
+                # # 8文本
+                # text = seven_contents[0].get('8')
+                # # 9文本属性
+                # text_attrs = seven_contents[0].get('9')
+                # if text and text_attrs:
+                #     text = self.convert_text_attribute(text,text_attrs)
         return text
         
     
@@ -198,11 +204,13 @@ class jsonConvert(object):
                 
                 # 获取文本和属性
                 if seven_contents and not two_five_contents:
-                    text = seven_contents[0].get('8')
-                    text_attrs = seven_contents[0].get('9')
-                    if text and text_attrs:
-                        text = self.convert_text_attribute(text,text_attrs)
-                
+                    text = ''
+                    for seven_content in seven_contents:
+                        split_text = seven_content.get('8')
+                        text_attrs = seven_content.get('9')
+                        if split_text and text_attrs:
+                            split_text = self.convert_text_attribute(split_text,text_attrs)
+                        text+=split_text
                 # 链接类型        
                 elif text_type == "li" and two_five_contents:
                     source_text = self.get_common_text(one_five_content)
@@ -230,7 +238,10 @@ class jsonConvert(object):
                 elif attr['2'] == "i":
                     # 斜体
                     text = f"*{text}*"
-        
+                # elif attr['2'] == "c":
+                #     # 带颜色字体
+                #     text = f"<font color={attr['0']}>{text}</font>"
+
         return text
         
 
@@ -279,6 +290,7 @@ class jsonConvert(object):
             text += "> {q_text}\n".format(q_text=q_text)
         return text
 
+    # 列表的转换
     def convert_l_func(self,content):
         """有序列表和无序列表,有序列表转成无序列表"""
         text = self.get_common_text(content=content)
@@ -308,7 +320,10 @@ class jsonConvert(object):
             for table_content in table_content_list:
                 table_text_list = table_content.get('5')[0].get('5')[0].get('7')
                 if table_text_list:
-                    table_text = table_text_list[0]['8']
+                    table_text = ''
+                    # 有些表格的内容是多种格式文本组成的，这里需要拼接。若需要保留格式，可以参考convert_text_func
+                    for table_text_dict in table_text_list:
+                        table_text += table_text_dict.get('8')
                 else:
                     table_text = " "
                 # print(table_text)
@@ -440,6 +455,7 @@ class YoudaoNoteConvert(object):
                 else:
                     line_content = convert_func(content)
             else:
+                # 普通文本
                 line_content = jsonConvert().convert_text_func(content)
             
             # 判断是否有内容
@@ -460,6 +476,7 @@ class YoudaoNoteConvert(object):
         if os.path.getsize(file_path) == 0:
             os.rename(file_path, new_file_path)
             return False
+        # 转换
         new_content = YoudaoNoteConvert.covert_json_to_markdown_content(file_path)
         with open(new_file_path, 'wb') as f:
             f.write(new_content.encode('utf-8'))

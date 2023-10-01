@@ -222,6 +222,7 @@ class YoudaoNotePull(object):
         
         return note_type            
 
+
     def _pull_file(self, file_id, file_path, note_type):
         """
         下载文件
@@ -245,6 +246,8 @@ class YoudaoNotePull(object):
                 new_file_path = YoudaoNoteConvert.covert_html_to_markdown(file_path)
             except Exception:
                 print(f'{file_path} 笔记转换 MarkDown 失败，将跳过')
+
+        # 3、如果文件是 json 类型，将其转换为 MarkDown 类型
         elif note_type == 2:
             new_file_path = YoudaoNoteConvert.covert_json_to_markdown(file_path)
         elif note_type == 3:
